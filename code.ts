@@ -1,12 +1,29 @@
-let count = 0
-
 function traverse({node}: { node: any }, pageNumbers: Array<TextNode>) {
     if ("children" in node) {
         if (node.name == "PAGE NUMBER COMPONENT") {
-            pageNumbers.push(node.children[0])
-            // count++
-            // console.log("PAGE NUMBER!!!")
-            // console.log('bounds: ' + JSON.stringify(node.absoluteBoundingBox))
+            let child = node.children[0]
+            let checkVisibility = false
+            let visible = true
+            // XXX: This visibility check doesn't work and I'm not sure why.
+            if (checkVisibility) {
+                const nodes = []
+                nodes.push(child)
+
+                let parent = child.parent
+                while (parent != null) {
+                    nodes.push(parent)
+                    parent = parent.parent
+                }
+                for (const node of nodes) {
+                    if (!node.visible) {
+                        visible = false
+                        break
+                    }
+                }
+            }
+            if (visible) {
+                pageNumbers.push(child)
+            }
         }
         for (const child of node.children) {
             traverse({node: child}, pageNumbers)
@@ -37,7 +54,7 @@ async function renumber(pageNumbers: Array<TextNode>) {
         const fontName = pageNumber.fontName as FontName
         await figma.loadFontAsync(fontName)
         const box = pageNumber.absoluteBoundingBox
-        if ( box != null) {
+        if (box != null) {
             console.log(`${pageCount}: (x,y): ${box.x}, ${box.y}`)
         } else {
             console.log(`${pageCount}: NULL BOUNDING BOX`)
@@ -46,11 +63,13 @@ async function renumber(pageNumbers: Array<TextNode>) {
     }
 }
 
-let pageNumbers = new Array<TextNode>()
-traverse({node: figma.root}, pageNumbers) // start the traversal at the root
-pageNumbers.sort(pageNumberCompare)
-renumber(pageNumbers).finally(() => figma.closePlugin())
+async function doStuff() {
+    // Paginate
+    let pageNumbers = new Array<TextNode>()
+    traverse({node: figma.root}, pageNumbers) // start the traversal at the root
+    pageNumbers.sort(pageNumberCompare)
+    await renumber(pageNumbers)
+}
 
-
-//figma.closePlugin()
+doStuff().finally(() => figma.closePlugin())
 
