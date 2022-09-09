@@ -34,7 +34,6 @@ function pageNumberCompare(a: TextNode, b: TextNode): number {
         console.log(`first compare: ${rv}`)
         if (rv == 0) {
             rv = abox.x - bbox.x
-            console.log(`second compare: ${rv}`)
         }
     }
     return rv
@@ -62,7 +61,6 @@ async function doStuff() {
     // Paginate
     let pageNumbers = new Array<TextNode>()
     traverse({node: figma.root}, pageNumbers) // start the traversal at the root
-    console.log(`pageNumbers size: ${pageNumbers.length}`)
     pageNumbers.sort(pageNumberCompare)
     await renumber(pageNumbers)
 }
