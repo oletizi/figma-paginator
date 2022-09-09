@@ -1,35 +1,28 @@
+function pageFrame(child: BaseNode) {
+    let topParent = null;
+    while (child.parent !== null && child.parent.type != 'PAGE') {
+        topParent = child.parent
+        child = topParent
+    }
+    return topParent
+}
+
 function traverse({node}: { node: any }, pageNumbers: Array<TextNode>) {
     if ("children" in node) {
         if (node.name == "PAGE NUMBER COMPONENT") {
             let child = node.children[0]
-            let checkVisibility = false
-            let visible = true
-            // XXX: This visibility check doesn't work and I'm not sure why.
-            if (checkVisibility) {
-                const nodes = []
-                nodes.push(child)
-
-                let parent = child.parent
-                while (parent != null) {
-                    nodes.push(parent)
-                    parent = parent.parent
-                }
-                for (const node of nodes) {
-                    if (!node.visible) {
-                        visible = false
-                        break
-                    }
-                }
+            let tp = pageFrame(child)
+            if (tp !== null) {
+                console.log(`Top parent of page number: ${tp.name}`)
             }
-            if (visible) {
-                pageNumbers.push(child)
-            }
+            pageNumbers.push(child)
         }
         for (const child of node.children) {
             traverse({node: child}, pageNumbers)
         }
     }
 }
+
 
 function pageNumberCompare(a: TextNode, b: TextNode): number {
     let rv = 0;
@@ -63,10 +56,13 @@ async function renumber(pageNumbers: Array<TextNode>) {
     }
 }
 
+
+
 async function doStuff() {
     // Paginate
     let pageNumbers = new Array<TextNode>()
     traverse({node: figma.root}, pageNumbers) // start the traversal at the root
+    console.log(`pageNumbers size: ${pageNumbers.length}`)
     pageNumbers.sort(pageNumberCompare)
     await renumber(pageNumbers)
 }
